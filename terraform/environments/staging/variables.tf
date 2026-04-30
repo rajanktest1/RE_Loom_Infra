@@ -33,11 +33,6 @@ variable "aks_node_max_count" {
   default = 5
 }
 
-variable "acr_sku" {
-  type    = string
-  default = "Standard"
-}
-
 variable "redis_sku" {
   type    = string
   default = "Standard"

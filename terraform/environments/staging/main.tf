@@ -50,14 +50,10 @@ module "networking" {
   project_name        = var.project_name
 }
 
-module "acr" {
-  source = "../../modules/acr"
-
-  resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  environment         = var.environment
-  project_name        = var.project_name
-  sku                 = var.acr_sku
+# Shared ACR (provisioned by shared environment)
+data "azurerm_container_registry" "shared" {
+  name                = "acr${replace(var.project_name, "-", "")}shared"
+  resource_group_name = "rg-${var.project_name}-shared"
 }
 
 module "aks" {
@@ -72,7 +68,7 @@ module "aks" {
   default_node_pool_vm_size   = var.aks_node_vm_size
   default_node_pool_min_count = var.aks_node_min_count
   default_node_pool_max_count = var.aks_node_max_count
-  acr_id                      = module.acr.acr_id
+  acr_id                      = data.azurerm_container_registry.shared.id
 }
 
 module "cosmosdb" {

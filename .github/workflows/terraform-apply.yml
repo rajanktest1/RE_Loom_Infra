@@ -1,5 +1,11 @@
 name: Terraform Apply
 
+# =============================================================================
+# Sequential Apply: shared → dev → staging → prod
+# Manual approval is enforced via GitHub Environment protection rules.
+# Configure required reviewers in: Repo Settings → Environments → <env> → Protection rules
+# =============================================================================
+
 on:
   push:
     branches: [main]
@@ -8,10 +14,12 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to apply'
-        required: true
+        description: 'Environment to apply (blank = full pipeline)'
+        required: false
         type: choice
         options:
+          - ''
+          - shared
           - dev
           - staging
           - prod
@@ -25,16 +33,27 @@ env:
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   ARM_USE_OIDC: true
+  TF_VERSION: "1.7.0"
 
 jobs:
-  apply-dev:
-    name: Apply Dev
-    if: github.event_name == 'push' || github.event.inputs.environment == 'dev'
+  # ===========================================================================
+  # STEP 1: Apply Shared Infrastructure (ACR, shared RG)
+  # No approval needed — shared infra is foundational
+  # ===========================================================================
+  apply-shared:
+    name: "Apply Shared"
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.environment == '' ||
+      github.event.inputs.environment == 'shared'
     runs-on: ubuntu-latest
-    environment: dev
+    environment: shared
     defaults:
       run:
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/shared
+    outputs:
+      acr_name: ${{ steps.outputs.outputs.acr_name }}
+      acr_login_server: ${{ steps.outputs.outputs.acr_login_server }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +66,8 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: |
@@ -57,10 +77,73 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
+      - name: Export Outputs
+        id: outputs
+        run: |
+          echo "acr_name=$(terraform output -raw acr_name)" >> $GITHUB_OUTPUT
+          echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
+
+  # ===========================================================================
+  # STEP 2: Apply Dev Environment
+  # Requires manual approval via GitHub Environment "dev" protection rules
+  # ===========================================================================
+  apply-dev:
+    name: "Apply Dev"
+    needs: apply-shared
+    if: >-
+      always() && 
+      (needs.apply-shared.result == 'success' || needs.apply-shared.result == 'skipped') &&
+      (github.event_name == 'push' ||
+       github.event.inputs.environment == '' ||
+       github.event.inputs.environment == 'dev')
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+    outputs:
+      aks_cluster_name: ${{ steps.outputs.outputs.aks_cluster_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Export Outputs
+        id: outputs
+        run: |
+          echo "aks_cluster_name=$(terraform output -raw aks_cluster_name)" >> $GITHUB_OUTPUT
+
+  # ===========================================================================
+  # STEP 3: Apply Staging Environment
+  # Requires manual approval via GitHub Environment "staging" protection rules
+  # ===========================================================================
   apply-staging:
-    name: Apply Staging
-    if: github.event.inputs.environment == 'staging'
-    needs: []
+    name: "Apply Staging"
+    needs: [apply-shared, apply-dev]
+    if: >-
+      always() &&
+      (needs.apply-dev.result == 'success' || needs.apply-dev.result == 'skipped') &&
+      (github.event_name == 'push' ||
+       github.event.inputs.environment == '' ||
+       github.event.inputs.environment == 'staging')
     runs-on: ubuntu-latest
     environment: staging
     defaults:
@@ -78,7 +161,8 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: |
@@ -88,10 +172,19 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
+  # ===========================================================================
+  # STEP 4: Apply Production Environment
+  # Requires manual approval via GitHub Environment "prod" protection rules
+  # ===========================================================================
   apply-prod:
-    name: Apply Production
-    if: github.event.inputs.environment == 'prod'
-    needs: []
+    name: "Apply Production"
+    needs: [apply-shared, apply-staging]
+    if: >-
+      always() &&
+      (needs.apply-staging.result == 'success' || needs.apply-staging.result == 'skipped') &&
+      (github.event_name == 'push' ||
+       github.event.inputs.environment == '' ||
+       github.event.inputs.environment == 'prod')
     runs-on: ubuntu-latest
     environment: prod
     defaults:
@@ -109,7 +202,8 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.7.0"
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: |

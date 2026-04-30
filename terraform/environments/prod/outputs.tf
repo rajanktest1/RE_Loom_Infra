@@ -7,11 +7,11 @@ output "aks_cluster_name" {
 }
 
 output "acr_login_server" {
-  value = module.acr.acr_login_server
+  value = data.azurerm_container_registry.shared.login_server
 }
 
 output "acr_name" {
-  value = module.acr.acr_name
+  value = data.azurerm_container_registry.shared.name
 }
 
 output "key_vault_name" {
