@@ -1,0 +1,69 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: realestate
+
+resources:
+  - ../../base
+
+patches:
+  # Staging replicas
+  - target:
+      kind: Deployment
+      name: gateway
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+  - target:
+      kind: Deployment
+      name: web
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+  # SecretProviderClass patches
+  - target:
+      kind: SecretProviderClass
+      name: azure-kv-secrets
+    patch: |
+      - op: replace
+        path: /spec/parameters/keyvaultName
+        value: "kv-realestate-staging"
+      - op: replace
+        path: /spec/parameters/tenantId
+        value: "TENANT_ID_PLACEHOLDER"
+
+images:
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/gateway
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/auth-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/inventory-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/supply-chain-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/crm-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/notification-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/document-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatestaging.azurecr.io/realestate/web
+    newTag: latest
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - NODE_ENV=staging
+      - LOG_LEVEL=info

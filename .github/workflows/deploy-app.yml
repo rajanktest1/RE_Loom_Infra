@@ -1,0 +1,91 @@
+name: Deploy Application
+
+on:
+  repository_dispatch:
+    types: [deploy-app]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g. sha-abc1234)'
+        required: true
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || github.event.client_payload.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || github.event.client_payload.environment }}
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment || github.event.client_payload.environment }}
+      IMAGE_TAG: ${{ github.event.inputs.image_tag || github.event.client_payload.image_tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials \
+            --resource-group "rg-realestate-${{ env.ENVIRONMENT }}" \
+            --name "aks-realestate-${{ env.ENVIRONMENT }}" \
+            --overwrite-existing
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Install Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update image tags in overlay
+        run: |
+          cd k8s/overlays/${{ env.ENVIRONMENT }}
+          
+          ACR_NAME=$(grep 'newName:' kustomization.yaml | head -1 | awk -F'/' '{print $1}' | awk '{print $2}')
+          
+          # Update all image tags using kustomize
+          SERVICES="gateway auth-service inventory-service supply-chain-service crm-service notification-service document-service web"
+          for svc in $SERVICES; do
+            kustomize edit set image "IMAGE_PLACEHOLDER=${ACR_NAME}/realestate/${svc}:${{ env.IMAGE_TAG }}"
+          done
+
+      - name: Deploy with Kustomize
+        run: |
+          kubectl apply -k k8s/overlays/${{ env.ENVIRONMENT }}
+
+      - name: Wait for rollout
+        run: |
+          DEPLOYMENTS="gateway auth-service inventory-service supply-chain-service crm-service notification-service document-service web"
+          for deploy in $DEPLOYMENTS; do
+            echo "Waiting for $deploy rollout..."
+            kubectl rollout status deployment/$deploy -n realestate --timeout=300s || true
+          done
+
+      - name: Verify deployment
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n realestate -o wide
+          echo ""
+          echo "=== Services ==="
+          kubectl get svc -n realestate
+          echo ""
+          echo "=== Ingress ==="
+          kubectl get ingress -n realestate

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supply-chain-service
+  namespace: realestate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supply-chain-service
+  template:
+    metadata:
+      labels:
+        app: supply-chain-service
+    spec:
+      containers:
+        - name: supply-chain-service
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 4003
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: PORT
+              value: "4003"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MONGODB_URI
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /supply-chain/health
+              port: 4003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /supply-chain/health
+              port: 4003
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: secrets-store
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: azure-kv-secrets

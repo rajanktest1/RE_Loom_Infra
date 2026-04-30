@@ -1,0 +1,108 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: realestate
+
+resources:
+  - ../../base
+
+patches:
+  # Production replicas
+  - target:
+      kind: Deployment
+      name: gateway
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: Deployment
+      name: auth-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: Deployment
+      name: inventory-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: Deployment
+      name: crm-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: Deployment
+      name: web
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+
+  # SecretProviderClass patches
+  - target:
+      kind: SecretProviderClass
+      name: azure-kv-secrets
+    patch: |
+      - op: replace
+        path: /spec/parameters/keyvaultName
+        value: "kv-realestate-prod"
+      - op: replace
+        path: /spec/parameters/tenantId
+        value: "TENANT_ID_PLACEHOLDER"
+
+  # Production resource bumps
+  - target:
+      kind: Deployment
+      name: gateway
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+
+images:
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/gateway
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/auth-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/inventory-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/supply-chain-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/crm-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/notification-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/document-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestateprod.azurecr.io/realestate/web
+    newTag: latest
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=warn

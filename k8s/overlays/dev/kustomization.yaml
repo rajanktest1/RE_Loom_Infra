@@ -1,0 +1,71 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: realestate
+
+resources:
+  - ../../base
+
+patches:
+  # Scale down for dev
+  - target:
+      kind: Deployment
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  # Dev-specific HPA - lower limits
+  - target:
+      kind: HorizontalPodAutoscaler
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+
+  # SecretProviderClass patches
+  - target:
+      kind: SecretProviderClass
+      name: azure-kv-secrets
+    patch: |
+      - op: replace
+        path: /spec/parameters/keyvaultName
+        value: "kv-realestate-dev"
+      - op: replace
+        path: /spec/parameters/tenantId
+        value: "TENANT_ID_PLACEHOLDER"
+
+images:
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/gateway
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/auth-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/inventory-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/supply-chain-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/crm-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/notification-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/document-service
+    newTag: latest
+  - name: IMAGE_PLACEHOLDER
+    newName: acrealestatedev.azurecr.io/realestate/web
+    newTag: latest
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug

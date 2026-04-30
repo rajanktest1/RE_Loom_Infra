@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: realestate
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets-csi.yaml
+  - rabbitmq-statefulset.yaml
+  - deployments/gateway.yaml
+  - deployments/auth-service.yaml
+  - deployments/inventory-service.yaml
+  - deployments/supply-chain-service.yaml
+  - deployments/crm-service.yaml
+  - deployments/notification-service.yaml
+  - deployments/document-service.yaml
+  - deployments/web.yaml
+  - services/gateway.yaml
+  - services/auth-service.yaml
+  - services/inventory-service.yaml
+  - services/supply-chain-service.yaml
+  - services/crm-service.yaml
+  - services/notification-service.yaml
+  - services/document-service.yaml
+  - services/web.yaml
+  - services/rabbitmq.yaml
+  - ingress.yaml
+  - hpa.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: realestate
+  app.kubernetes.io/managed-by: kustomize
