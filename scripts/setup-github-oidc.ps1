@@ -54,8 +54,11 @@ $InfraMainParams = @{
     issuer    = "https://token.actions.githubusercontent.com"
     subject   = "repo:${GitHubOrg}/InfraRepo:ref:refs/heads/main"
     audiences = @("api://AzureADTokenExchange")
-} | ConvertTo-Json -Compress
-az ad app federated-credential create --id $AppId --parameters $InfraMainParams --output none
+} | ConvertTo-Json
+$tmpFile = [System.IO.Path]::GetTempFileName()
+$InfraMainParams | Out-File -FilePath $tmpFile -Encoding utf8
+az ad app federated-credential create --id $AppId --parameters "@$tmpFile" --output none
+Remove-Item $tmpFile
 if ($LASTEXITCODE -ne 0) { throw "Failed to add InfraRepo:main credential" }
 
 # Add federated credential for InfraRepo (pull requests)
@@ -65,8 +68,11 @@ $InfraPrParams = @{
     issuer    = "https://token.actions.githubusercontent.com"
     subject   = "repo:${GitHubOrg}/InfraRepo:pull_request"
     audiences = @("api://AzureADTokenExchange")
-} | ConvertTo-Json -Compress
-az ad app federated-credential create --id $AppId --parameters $InfraPrParams --output none
+} | ConvertTo-Json
+$tmpFile = [System.IO.Path]::GetTempFileName()
+$InfraPrParams | Out-File -FilePath $tmpFile -Encoding utf8
+az ad app federated-credential create --id $AppId --parameters "@$tmpFile" --output none
+Remove-Item $tmpFile
 if ($LASTEXITCODE -ne 0) { throw "Failed to add InfraRepo:pull_request credential" }
 
 # Add federated credential for AppRepo (main branch - for ACR push)
@@ -76,8 +82,11 @@ $AppMainParams = @{
     issuer    = "https://token.actions.githubusercontent.com"
     subject   = "repo:${GitHubOrg}/AppRepo:ref:refs/heads/main"
     audiences = @("api://AzureADTokenExchange")
-} | ConvertTo-Json -Compress
-az ad app federated-credential create --id $AppId --parameters $AppMainParams --output none
+} | ConvertTo-Json
+$tmpFile = [System.IO.Path]::GetTempFileName()
+$AppMainParams | Out-File -FilePath $tmpFile -Encoding utf8
+az ad app federated-credential create --id $AppId --parameters "@$tmpFile" --output none
+Remove-Item $tmpFile
 if ($LASTEXITCODE -ne 0) { throw "Failed to add AppRepo:main credential" }
 
 # Add federated credential for InfraRepo environments
@@ -88,8 +97,11 @@ foreach ($Env in @("dev", "staging", "prod")) {
         issuer    = "https://token.actions.githubusercontent.com"
         subject   = "repo:${GitHubOrg}/InfraRepo:environment:${Env}"
         audiences = @("api://AzureADTokenExchange")
-    } | ConvertTo-Json -Compress
-    az ad app federated-credential create --id $AppId --parameters $EnvParams --output none
+    } | ConvertTo-Json
+    $tmpFile = [System.IO.Path]::GetTempFileName()
+    $EnvParams | Out-File -FilePath $tmpFile -Encoding utf8
+    az ad app federated-credential create --id $AppId --parameters "@$tmpFile" --output none
+    Remove-Item $tmpFile
     if ($LASTEXITCODE -ne 0) { throw "Failed to add InfraRepo:environment:$Env credential" }
 }
 

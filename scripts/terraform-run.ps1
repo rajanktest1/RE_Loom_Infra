@@ -7,7 +7,7 @@
 
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("dev", "staging", "prod")]
+    [ValidateSet("shared", "dev", "staging", "prod")]
     [string]$Environment,
 
     [Parameter(Mandatory = $true)]
@@ -23,7 +23,7 @@ if (-not $StorageAccount) {
     throw "Storage account required. Set TF_STATE_STORAGE_ACCOUNT env var or pass -StorageAccount"
 }
 
-$EnvPath = Join-Path $PSScriptRoot ".." "terraform" "environments" $Environment
+$EnvPath = Join-Path $PSScriptRoot "..\terraform\environments\$Environment"
 if (-not (Test-Path $EnvPath)) { throw "Environment path not found: $EnvPath" }
 
 Write-Host "=== Terraform $Action - $Environment ===" -ForegroundColor Cyan
