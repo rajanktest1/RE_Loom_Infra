@@ -24,9 +24,13 @@ variable "containers" {
   default = ["documents", "uploads", "exports"]
 }
 
+resource "random_id" "storage_suffix" {
+  byte_length = 3
+}
+
 locals {
-  # Storage account names: 3-24 lowercase alphanumeric
-  storage_name = "st${replace(var.project_name, "-", "")}${var.environment}"
+  # Storage account names: 3-24 lowercase alphanumeric, globally unique
+  storage_name = "st${replace(var.project_name, "-", "")}${var.environment}${random_id.storage_suffix.hex}"
 }
 
 resource "azurerm_storage_account" "main" {

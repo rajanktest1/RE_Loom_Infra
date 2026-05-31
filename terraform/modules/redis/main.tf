@@ -1,5 +1,5 @@
 # =============================================================================
-# Redis Module - Azure Cache for Redis
+# Redis Module - Azure Managed Redis
 # =============================================================================
 
 variable "resource_group_name" {
@@ -21,12 +21,12 @@ variable "project_name" {
 
 variable "sku_name" {
   type    = string
-  default = "Basic"
+  default = "Balanced_B0"
 }
 
 variable "family" {
   type    = string
-  default = "C"
+  default = ""
 }
 
 variable "capacity" {
@@ -38,18 +38,14 @@ locals {
   name_prefix = "${var.project_name}-${var.environment}"
 }
 
-resource "azurerm_redis_cache" "main" {
+resource "azurerm_managed_redis" "main" {
   name                = "redis-${local.name_prefix}"
   location            = var.location
   resource_group_name = var.resource_group_name
-  capacity            = var.capacity
-  family              = var.family
   sku_name            = var.sku_name
 
-  minimum_tls_version = "1.2"
-
-  redis_configuration {
-    maxmemory_policy = "allkeys-lru"
+  default_database {
+    access_keys_authentication_enabled = true
   }
 
   tags = {
@@ -59,19 +55,19 @@ resource "azurerm_redis_cache" "main" {
 }
 
 output "redis_hostname" {
-  value = azurerm_redis_cache.main.hostname
+  value = azurerm_managed_redis.main.hostname
 }
 
 output "redis_port" {
-  value = azurerm_redis_cache.main.ssl_port
+  value = azurerm_managed_redis.main.default_database[0].port
 }
 
 output "redis_primary_key" {
-  value     = azurerm_redis_cache.main.primary_access_key
+  value     = azurerm_managed_redis.main.default_database[0].primary_access_key
   sensitive = true
 }
 
 output "redis_connection_string" {
-  value     = "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:${azurerm_redis_cache.main.ssl_port}"
+  value     = "rediss://:${azurerm_managed_redis.main.default_database[0].primary_access_key}@${azurerm_managed_redis.main.hostname}:${azurerm_managed_redis.main.default_database[0].port}"
   sensitive = true
 }

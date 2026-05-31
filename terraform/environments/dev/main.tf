@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 
   backend "azurerm" {
@@ -116,6 +120,7 @@ module "keyvault" {
   project_name                       = var.project_name
   tenant_id                          = data.azurerm_client_config.current.tenant_id
   aks_kubelet_identity_object_id     = module.aks.kubelet_identity_object_id
+  deployer_object_id                 = data.azurerm_client_config.current.object_id
 }
 
 module "monitoring" {
@@ -135,16 +140,22 @@ resource "azurerm_key_vault_secret" "cosmosdb_connection" {
   name         = "cosmosdb-connection-string"
   value        = module.cosmosdb.cosmosdb_connection_string
   key_vault_id = module.keyvault.key_vault_id
+
+  depends_on = [module.keyvault]
 }
 
 resource "azurerm_key_vault_secret" "redis_connection" {
   name         = "redis-connection-string"
   value        = module.redis.redis_connection_string
   key_vault_id = module.keyvault.key_vault_id
+
+  depends_on = [module.keyvault]
 }
 
 resource "azurerm_key_vault_secret" "storage_key" {
   name         = "storage-access-key"
   value        = module.storage.primary_access_key
   key_vault_id = module.keyvault.key_vault_id
+
+  depends_on = [module.keyvault]
 }
