@@ -36,6 +36,17 @@ patches:
       - op: replace
         path: /spec/parameters/tenantId
         value: "TENANT_ID_PLACEHOLDER"
+  # Override ConfigMap for dev
+  - target:
+      kind: ConfigMap
+      name: app-config
+    patch: |
+      - op: replace
+        path: /data/NODE_ENV
+        value: "development"
+      - op: add
+        path: /data/LOG_LEVEL
+        value: "debug"
 
 images:
   - name: IMAGE_PLACEHOLDER
@@ -62,10 +73,3 @@ images:
   - name: IMAGE_PLACEHOLDER
     newName: acrealestatedev.azurecr.io/realestate/web
     newTag: latest
-
-configMapGenerator:
-  - name: app-config
-    behavior: merge
-    literals:
-      - NODE_ENV=development
-      - LOG_LEVEL=debug
