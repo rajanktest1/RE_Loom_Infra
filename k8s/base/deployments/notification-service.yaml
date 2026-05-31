@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: IMAGE_PLACEHOLDER
+          image: realestate/notification-service
           ports:
             - containerPort: 4005
           envFrom:

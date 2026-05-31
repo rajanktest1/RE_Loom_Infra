@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: inventory-service
-          image: IMAGE_PLACEHOLDER
+          image: realestate/inventory-service
           ports:
             - containerPort: 4002
           envFrom:

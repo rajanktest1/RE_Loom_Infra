@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: crm-service
-          image: IMAGE_PLACEHOLDER
+          image: realestate/crm-service
           ports:
             - containerPort: 4004
           envFrom:

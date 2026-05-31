@@ -64,7 +64,7 @@ jobs:
           # Update all image tags using kustomize
           SERVICES="gateway auth-service inventory-service supply-chain-service crm-service notification-service document-service web"
           for svc in $SERVICES; do
-            kustomize edit set image "IMAGE_PLACEHOLDER=${ACR_NAME}/realestate/${svc}:${{ env.IMAGE_TAG }}"
+            kustomize edit set image "realestate/${svc}=${ACR_NAME}/realestate/${svc}:${{ env.IMAGE_TAG }}"
           done
 
       - name: Deploy with Kustomize

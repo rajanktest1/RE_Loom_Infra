@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: supply-chain-service
-          image: IMAGE_PLACEHOLDER
+          image: realestate/supply-chain-service
           ports:
             - containerPort: 4003
           envFrom:

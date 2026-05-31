@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: IMAGE_PLACEHOLDER
+          image: realestate/web
           ports:
             - containerPort: 8080
           resources:

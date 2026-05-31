@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: document-service
-          image: IMAGE_PLACEHOLDER
+          image: realestate/document-service
           ports:
             - containerPort: 4006
           envFrom:
