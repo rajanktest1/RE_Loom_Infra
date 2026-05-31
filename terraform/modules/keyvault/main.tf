@@ -28,11 +28,6 @@ variable "tenant_id" {
   type = string
 }
 
-variable "deployer_object_id" {
-  type        = string
-  description = "Object ID of the service principal running Terraform (for Key Vault secret management)"
-}
-
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
 }
@@ -59,13 +54,6 @@ resource "azurerm_role_assignment" "aks_kv_reader" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = var.aks_kubelet_identity_object_id
-}
-
-# Allow the deploying service principal to manage secrets
-resource "azurerm_role_assignment" "deployer_kv_officer" {
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = var.deployer_object_id
 }
 
 output "key_vault_id" {
