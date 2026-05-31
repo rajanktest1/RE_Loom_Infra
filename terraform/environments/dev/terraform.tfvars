@@ -1,6 +1,6 @@
 environment        = "dev"
 location           = "centralindia"
-kubernetes_version = "1.32"
+kubernetes_version = "1.33"
 aks_node_vm_size   = "Standard_B2ms"
 aks_node_min_count = 1
 aks_node_max_count = 3
