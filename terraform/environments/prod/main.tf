@@ -108,6 +108,7 @@ module "keyvault" {
   environment                        = var.environment
   project_name                       = var.project_name
   tenant_id                          = data.azurerm_client_config.current.tenant_id
+  name_suffix                        = "01"
 }
 
 module "monitoring" {

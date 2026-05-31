@@ -23,12 +23,18 @@ variable "tenant_id" {
   type = string
 }
 
+variable "name_suffix" {
+  type    = string
+  default = ""
+}
+
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
+  kv_name     = var.name_suffix != "" ? "kv-${local.name_prefix}-${var.name_suffix}" : "kv-${local.name_prefix}"
 }
 
 resource "azurerm_key_vault" "main" {
-  name                       = "kv-${local.name_prefix}"
+  name                       = local.kv_name
   location                   = var.location
   resource_group_name        = var.resource_group_name
   tenant_id                  = var.tenant_id
