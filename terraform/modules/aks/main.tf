@@ -106,12 +106,7 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 }
 
-# Grant AKS kubelet identity AcrPull access
-resource "azurerm_role_assignment" "aks_acr_pull" {
-  scope                = var.acr_id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
-}
+# NOTE: AcrPull role assignment is managed outside Terraform (SP lacks roleAssignments/write)
 
 # Outputs
 output "cluster_id" {

@@ -19,11 +19,6 @@ variable "project_name" {
   default = "realestate"
 }
 
-variable "aks_kubelet_identity_object_id" {
-  type        = string
-  description = "AKS kubelet managed identity object ID for secret access"
-}
-
 variable "tenant_id" {
   type = string
 }
@@ -49,12 +44,7 @@ resource "azurerm_key_vault" "main" {
   }
 }
 
-# Allow AKS kubelet to read secrets
-resource "azurerm_role_assignment" "aks_kv_reader" {
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.aks_kubelet_identity_object_id
-}
+# NOTE: Key Vault Secrets User role assignment is managed outside Terraform (SP lacks roleAssignments/write)
 
 output "key_vault_id" {
   value = azurerm_key_vault.main.id

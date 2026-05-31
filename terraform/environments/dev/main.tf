@@ -119,7 +119,6 @@ module "keyvault" {
   environment                        = var.environment
   project_name                       = var.project_name
   tenant_id                          = data.azurerm_client_config.current.tenant_id
-  aks_kubelet_identity_object_id     = module.aks.kubelet_identity_object_id
 }
 
 module "monitoring" {
