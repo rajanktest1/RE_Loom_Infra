@@ -50,26 +50,26 @@ patches:
 
 images:
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/gateway
+    newName: acrrealestateshared.azurecr.io/realestate/gateway
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/auth-service
+    newName: acrrealestateshared.azurecr.io/realestate/auth-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/inventory-service
+    newName: acrrealestateshared.azurecr.io/realestate/inventory-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/supply-chain-service
+    newName: acrrealestateshared.azurecr.io/realestate/supply-chain-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/crm-service
+    newName: acrrealestateshared.azurecr.io/realestate/crm-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/notification-service
+    newName: acrrealestateshared.azurecr.io/realestate/notification-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/document-service
+    newName: acrrealestateshared.azurecr.io/realestate/document-service
     newTag: latest
   - name: IMAGE_PLACEHOLDER
-    newName: acrealestatedev.azurecr.io/realestate/web
+    newName: acrrealestateshared.azurecr.io/realestate/web
     newTag: latest
