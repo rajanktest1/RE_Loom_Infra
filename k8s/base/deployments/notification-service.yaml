@@ -48,14 +48,3 @@ spec:
               port: 4005
             initialDelaySeconds: 15
             periodSeconds: 20
-          volumeMounts:
-            - name: secrets-store
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
-      volumes:
-        - name: secrets-store
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: azure-kv-secrets

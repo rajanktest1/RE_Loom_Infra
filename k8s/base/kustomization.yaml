@@ -6,7 +6,6 @@ namespace: realestate
 resources:
   - namespace.yaml
   - configmap.yaml
-  - secrets-csi.yaml
   - rabbitmq-statefulset.yaml
   - deployments/gateway.yaml
   - deployments/auth-service.yaml

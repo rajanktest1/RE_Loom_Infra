@@ -24,18 +24,6 @@ patches:
       - op: replace
         path: /spec/maxReplicas
         value: 2
-
-  # SecretProviderClass patches
-  - target:
-      kind: SecretProviderClass
-      name: azure-kv-secrets
-    patch: |
-      - op: replace
-        path: /spec/parameters/keyvaultName
-        value: "kv-realestate-dev"
-      - op: replace
-        path: /spec/parameters/tenantId
-        value: "TENANT_ID_PLACEHOLDER"
   # Override ConfigMap for dev
   - target:
       kind: ConfigMap
