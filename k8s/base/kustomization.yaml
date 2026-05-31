@@ -24,10 +24,10 @@ resources:
   - services/notification-service.yaml
   - services/document-service.yaml
   - services/web.yaml
-  - services/rabbitmq.yaml
   - ingress.yaml
   - hpa.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: realestate
-  app.kubernetes.io/managed-by: kustomize
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: realestate
+      app.kubernetes.io/managed-by: kustomize
