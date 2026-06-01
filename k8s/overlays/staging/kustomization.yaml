@@ -23,47 +23,40 @@ patches:
         path: /spec/replicas
         value: 2
 
-  # SecretProviderClass patches
+  # Override ConfigMap for staging
   - target:
-      kind: SecretProviderClass
-      name: azure-kv-secrets
+      kind: ConfigMap
+      name: app-config
     patch: |
       - op: replace
-        path: /spec/parameters/keyvaultName
-        value: "kv-realestate-staging"
-      - op: replace
-        path: /spec/parameters/tenantId
-        value: "TENANT_ID_PLACEHOLDER"
+        path: /data/NODE_ENV
+        value: "staging"
+      - op: add
+        path: /data/LOG_LEVEL
+        value: "info"
 
 images:
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/gateway
+  - name: realestate/gateway
+    newName: acrrealestateshared.azurecr.io/realestate/gateway
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/auth-service
+  - name: realestate/auth-service
+    newName: acrrealestateshared.azurecr.io/realestate/auth-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/inventory-service
+  - name: realestate/inventory-service
+    newName: acrrealestateshared.azurecr.io/realestate/inventory-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/supply-chain-service
+  - name: realestate/supply-chain-service
+    newName: acrrealestateshared.azurecr.io/realestate/supply-chain-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/crm-service
+  - name: realestate/crm-service
+    newName: acrrealestateshared.azurecr.io/realestate/crm-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/notification-service
+  - name: realestate/notification-service
+    newName: acrrealestateshared.azurecr.io/realestate/notification-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/document-service
+  - name: realestate/document-service
+    newName: acrrealestateshared.azurecr.io/realestate/document-service
     newTag: latest
-  - name: IMAGE_PLACEHOLDER
-    newName: acrealestatestaging.azurecr.io/realestate/web
+  - name: realestate/web
+    newName: acrrealestateshared.azurecr.io/realestate/web
     newTag: latest
-
-configMapGenerator:
-  - name: app-config
-    behavior: merge
-    literals:
-      - NODE_ENV=staging
-      - LOG_LEVEL=info
